@@ -92,4 +92,3 @@ setTimeout(() => {
   $$('#stats b').forEach((b) => countUp(b, +b.dataset.n, (v) => Math.round(v), 1400));
 }, 900);
 $('#counter').setAttribute('data-tip-sub', `${shekel(totalAmount())}. סכום כל האירועים בציר הזמן שיש להם סכום. לחצו כדי לראות את הכסף נשרף שוב.`);
-if (!tour.seen()) setTimeout(() => tour.start(), 2600);

@@ -64,7 +64,7 @@ export function initModal({ order, onJump, onShow }) {
           ${ev.facts?.length ? `<h4>נתונים</h4><div class="m-facts">${ev.facts.map(([k, v], n) => `<div class="m-fact" style="--i:${n}"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}</div>` : ''}
           ${ev.people?.length ? `<h4>מעורבים</h4><div class="m-people">${ev.people.map((p) => `<span class="m-person" data-tip="${esc(p)}" data-tip-sub="גורם מעורב באירוע"><i>${IC.person}</i>${esc(p)}</span>`).join('')}</div>` : ''}
           <h4>מסמכים (${docs.length})</h4>
-          <div class="m-docs">${docs.length ? docs.map((d) => `<button class="m-doc" data-doc="${d.id}" data-tip="${esc(d.title)}" data-tip-sub="לחצו לפתיחת המסמך" data-tip-k="${esc(DOC_TYPES[d.type].name)}">${IC[DOC_TYPES[d.type].icon]}<span><b>${esc(d.title)}</b><small>${esc(dateOf(d))} · ${d.pages} עמ׳</small></span></button>`).join('') : '<p class="sec-s">אין עדיין מסמכים לנקודה הזו.</p>'}</div>
+          <div class="m-docs">${docs.length ? docs.map((d) => `<button class="m-doc" data-doc="${d.id}" data-tip="${esc(d.title)}" data-tip-sub="לחצו לפתיחת המסמך" data-tip-k="${esc(DOC_TYPES[d.type].name)}">${IC[DOC_TYPES[d.type].icon]}<span><b>${esc(d.title)}</b><small>${esc(dateOf(d))} · ${d.type === 'video' ? 'וידאו' : `${d.pages} עמ׳`}</small></span></button>`).join('') : '<p class="sec-s">אין עדיין מסמכים לנקודה הזו.</p>'}</div>
         </div>
       </div>
       <nav class="m-nav">
@@ -84,7 +84,7 @@ export function initModal({ order, onJump, onShow }) {
           <span class="m-date">${esc(dateOf(d))}</span>
           <span class="tag" style="--c:#fff">${IC[ty.icon]}${esc(ty.name)}</span>
           ${d.issues.map((x) => `<span class="tag" style="--c:${issueById[x].color}" data-tip="${esc(issueById[x].name)}" data-tip-sub="${esc(issueById[x].desc)}" data-tip-k="נושא">${esc(issueById[x].name)}</span>`).join('')}
-          <span class="m-idx">${d.pages} עמודים</span>
+          <span class="m-idx">${d.type === 'video' ? 'וידאו' : `${d.pages} עמודים`}</span>
         </div>
         ${d.badge ? `<span class="hl-badge lg">${esc(d.badge)}</span>` : ''}<h2 id="m-title">${esc(d.title)}</h2>
         <p class="m-short">${esc(d.summary)}</p>
@@ -92,7 +92,8 @@ export function initModal({ order, onJump, onShow }) {
         ${d.note ? `<p class="m-note" data-tip="הערת עריכה" data-tip-sub="פרט שכדאי לבדוק מול המקור">${IC.eye}<span>${esc(d.note)}</span></p>` : ''}
         ${d.file ? `<div class="m-file-acts"><a class="btn ghost" href="${esc(d.file)}" target="_blank" rel="noopener" data-tip="פתיחת המסמך המלא בלשונית חדשה" data-tip-k="PDF">${IC.doc}<span>פתיחה בלשונית חדשה</span></a>${d.page ? `<span class="m-idx">נפתח בעמ׳ ${d.page}</span>` : ''}</div>` : ''}
       </header>
-      ${d.file && /\.(jpe?g|png|webp|gif)$/i.test(d.file) ? `<a href="${esc(d.file)}" target="_blank" rel="noopener" style="display:block;margin:24px 36px" data-tip="פתיחה בגודל מלא"><img src="${esc(d.file)}" alt="${esc(d.title)}" style="display:block;width:100%;height:auto;border:1px solid var(--line2);border-radius:16px;background:#fff"></a>`
+      ${d.file && /\.(mp4|m4v|mov|webm)$/i.test(d.file) ? `<video src="${esc(d.file)}" controls playsinline preload="metadata" style="display:block;width:calc(100% - 72px);max-height:75vh;margin:24px 36px;border:1px solid var(--line2);border-radius:16px;background:#000"></video>`
+        : d.file && /\.(jpe?g|png|webp|gif)$/i.test(d.file) ? `<a href="${esc(d.file)}" target="_blank" rel="noopener" style="display:block;margin:24px 36px" data-tip="פתיחה בגודל מלא"><img src="${esc(d.file)}" alt="${esc(d.title)}" style="display:block;width:100%;height:auto;border:1px solid var(--line2);border-radius:16px;background:#fff"></a>`
         : d.file ? `<iframe src="${esc(d.file)}${d.page ? `#page=${d.page}` : ''}" title="${esc(d.title)}" style="width:calc(100% - 72px);height:70vh;margin:24px 36px;border:1px solid var(--line2);border-radius:16px;background:#fff"></iframe>`
         : d.withheld ? `<div class="m-placeholder" style="margin-top:28px">${IC.eye}<b>המסמך המלא לא מוצג</b><span>${esc(d.withheld)}</span></div>`
         : `<div class="m-placeholder" style="margin-top:28px">${IC.doc}<b>קובץ המסמך יתווסף כאן</b><span>מגדירים את השדה file ב-js/data.js (למשל docs/${d.id}.pdf)</span></div>`}

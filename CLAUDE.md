@@ -12,6 +12,9 @@ An investigation page for "המבקר" (Yossi Mizrahi, Channel 12): "איך ש״
 - **Theme:** Money Heist mood (black, jumpsuit red, vault, falling banknotes) with Apple/Tesla clean layout. No Netflix / show artwork is used.
 - Timeline runs right → left (Hebrew reading order); RTL scrollLeft is 0 → negative.
 - **The hive (המעורבים, `js/hive.js`):** PEOPLE and LINKS in data.js. Contact details are official/public only (office, official site). No home addresses or private phone numbers, since the page is public. `alleged: true` marks a person or link that is a claim or suspicion (dashed in the hive).
+- **Agent RAG over the full documents:** `js/corpus.js` holds every document's text as passages, built by `sh tools/build-corpus.sh` (PDFKit text layer; emails, phones and ID numbers removed). **Rebuild it every time a document is added or changed.** Scanned PDFs, images and videos have no text layer and macOS OCR has no Hebrew, so their text goes by hand in `docs/text/<doc id>.txt` (no home addresses or IDs). The builder prints ✗ for any document without text.
+- **Gemini Nano writes gibberish Hebrew** (Hebrew isn't a supported language; the session falls back to English). So the model only plans tool calls; the answer shown is the material itself, unless a Hebrew session's answer passes `readsHebrew()` in agent.js.
+- The guided tour never starts on its own; only the tour buttons start it.
 - Document files: set `file` on a doc in data.js (e.g. `docs/d3.pdf`) and the doc modal shows it in an iframe.
 
 ## Not verified yet

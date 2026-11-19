@@ -4,7 +4,8 @@
 //   3. Without the model, the intent map plus retrieval answers on its own.
 // The same read-only tools are published to external agents through WebMCP (navigator.modelContext).
 import { STORY, EVENTS, DOCS, ISSUES, issueById, eventById, docsOf, DOC_TYPES, totalAmount, PLACEHOLDER, PEOPLE, LINKS, personById } from './data.js';
-import { Index, normHe } from './rag.js';
+import { Index, normHe, tokenize } from './rag.js';
+import { CORPUS } from './corpus.js';
 import { shekel, fmtDate, dateOf, monthOf } from './util.js';
 
 /* ── knowledge ───────────────────────────────────────── */
@@ -14,6 +15,8 @@ export const index = new Index([
   ...ISSUES.map((i) => ({ id: i.id, kind: 'issue', title: i.name, text: i.desc })),
   ...EVENTS.map((e) => ({ id: e.id, kind: 'event', title: e.title, text: [e.short, ...e.body, ...(e.facts || []).flat(), ...(e.people || []), e.quote?.text, e.quote?.by, issueById[e.issue].name, dateOf(e), e.date.slice(0, 4), e.shas ? 'ש״ס' : ''].join(' ') })),
   ...PEOPLE.map((p) => ({ id: p.id, kind: 'person', title: p.name, text: [p.role, p.short, p.story, p.note, ...LINKS.filter((l) => l.a === p.id || l.b === p.id).map((l) => `${personById[l.a === p.id ? l.b : l.a].name} ${l.label}`)].join(' ') })),
+  // full text of every document, split into passages (js/corpus.js, built by tools/build-corpus.sh)
+  ...CORPUS.map(([doc, page, text], i) => ({ id: `p${i}`, kind: 'passage', doc, page, title: '', text })),
   ...DOCS.map((d) => ({ id: d.id, kind: 'doc', title: d.title, text: [d.summary, DOC_TYPES[d.type].name, ...d.issues.map((x) => issueById[x].name), eventById[d.event]?.title, dateOf(d), d.date.slice(0, 4)].join(' ') })),
 ]);
 
@@ -31,6 +34,19 @@ export function findEvent(q) {
 }
 export const findDoc = (q) => { const n = normHe(q); return DOCS.find((d) => n.includes(normHe(d.title))) || DOCS.find((d) => normHe(d.title).replace(/\(.*?\)/g, '').trim().split(' ').filter((w) => w.length > 3).every((w) => n.includes(w))) || null; };
 const evLine = (e) => `- **${e.title}** (${dateOf(e)}, ${issueById[e.issue].name}${e.amount ? `, ${shekel(e.amount)}` : ''})`;
+/** The ~260 characters of a passage that best match the query. */
+function snippet(text, q, len = 260) {
+  if (text.length <= len) return text;
+  const qt = new Set(tokenize(q)), words = text.split(' ');
+  let best = 0, bestScore = -1;
+  for (let i = 0; i < words.length; i++) {
+    let sc = 0, n = 0;
+    for (let j = i; j < words.length && n < len; j++) { n += words[j].length + 1; if (tokenize(words[j]).some((t) => qt.has(t))) sc++; }
+    if (sc > bestScore) { bestScore = sc; best = i; }
+  }
+  let out = '', i = best; while (i < words.length && out.length < len) out += (out ? ' ' : '') + words[i++];
+  return `${best ? '…' : ''}${out}${i < words.length ? '…' : ''}`;
+}
 const need = (x, what, q) => { if (!x) throw new Error(`לא מצאתי ${what} בשם "${q}".`); return x; };
 
 /* ── tools ───────────────────────────────────────────── */
@@ -100,7 +116,7 @@ ${ISSUES.map((i) => [i, withAmt.filter((e) => e.issue === i.id).reduce((t, e) =>
       const list = e ? docsOf(e.id) : is ? DOCS.filter((d) => d.issues.includes(is.id)) : index.search(a.name, 8).filter((h) => h.doc.kind === 'doc').map((h) => DOCS.find((d) => d.id === h.doc.id));
       if (e) c.docsForEvent(e.id); else if (is) c.docsForIssue(is.id); else c.docsSearch(a.name);
       if (!list.length) return `לא מצאתי מסמכים עבור "${a.name}".`;
-      return `**${list.length} מסמכים${e ? ` לנקודה ${e.title}` : is ? ` בנושא ${is.name}` : ''}:**\n${list.map((d) => `- **${d.title}** (${DOC_TYPES[d.type].name}, ${dateOf(d)}, ${d.pages} עמ׳)`).join('\n')}`;
+      return `**${list.length} מסמכים${e ? ` לנקודה ${e.title}` : is ? ` בנושא ${is.name}` : ''}:**\n${list.map((d) => `- **${d.title}** (${DOC_TYPES[d.type].name}, ${dateOf(d)}, ${d.type === 'video' ? 'וידאו' : `${d.pages} עמ׳`})`).join('\n')}`;
     },
   },
   open_doc: {
@@ -111,12 +127,14 @@ ${ISSUES.map((i) => [i, withAmt.filter((e) => e.issue === i.id).reduce((t, e) =>
   },
   search_knowledge: {
     kind: 'rag', args: { query: 'Search text' },
-    desc: 'Search events, documents and issues by keywords. args: query',
+    desc: 'Search the full text of all documents, plus events, people and issues, by keywords. Returns quoted passages with page numbers. args: query',
     label: (a) => `מחפש בחומר: "${a.query}"`,
     run(a) {
-      const hits = index.search(a.query || '', 5);
+      const raw = index.search(a.query || '', 14), perDoc = {};
+      const hits = raw.filter(({ doc }) => doc.kind !== 'passage' || (perDoc[doc.doc] = (perDoc[doc.doc] || 0) + 1) <= 2).slice(0, 6);
       if (!hits.length) return `אין התאמה ל"${a.query}".`;
       return hits.map(({ doc }) => {
+        if (doc.kind === 'passage') { const d = DOCS.find((x) => x.id === doc.doc); return `- מתוך **${d.title}** (עמ׳ ${doc.page}): "${snippet(doc.text, a.query || '')}"`; }
         if (doc.kind === 'event') { const e = eventById[doc.id]; return `${evLine(e)}: ${e.short}`; }
         if (doc.kind === 'doc') { const d = DOCS.find((x) => x.id === doc.id); return `- מסמך **${d.title}** (${DOC_TYPES[d.type].name}, ${dateOf(d)}), שייך ל**${eventById[d.event]?.title}**`; }
         if (doc.kind === 'person') { const p = personById[doc.id]; return `- **${p.name}** (${p.role}): ${p.story}${p.note ? ` ${p.note}` : ''}`; }
@@ -165,6 +183,8 @@ const ORDERS = [
 function readIntent(q) {
   const n = normHe(q), e = findEvent(q), is = findIssue(q), d = findDoc(q);
   if (d) return ['open_doc', { name: d.title }];
+  // questions about what was said or written, who someone is, or why: answer from the documents' text
+  if (/אמר|נאמר|כתוב|נכתב|ציטוט|ציט|טוע[ןנ]|טענ|הצהיר|ענה|השיב|^\s*מי\b|\bמי (זה|זו|הוא|היא)|למה|מדוע|האם/.test(n)) return null;
   if (/מסמכ|ראי[הו]ת|פרוטוקול|חוזה|מכתב/.test(n)) return ['find_docs', { name: e?.title || is?.name || q }];
   if (e) return ['event_brief', { name: e.title }];
   if (/כמה כסף|סך הכל|סהכ|סכום כולל|לאן הלך|הכי גדול/.test(n) || (/כסף|סכום|מיליון|שקל|₪/.test(n) && !is)) return ['money_report', {}];
@@ -189,6 +209,20 @@ export async function engineStatus() {
   }
   return 'unavailable';
 }
+// Gemini Nano does not support Hebrew: with an English-only session its Hebrew comes out as gibberish.
+// So the model only plans (which tool, which query); the answer shown is the material itself,
+// unless the session really is Hebrew and the text reads as Hebrew from this material.
+const heSession = () => LM_OPTS?.expectedOutputs?.[0]?.languages?.[0] === 'he';
+let VOCAB = null;
+function readsHebrew(t) {
+  if (!t || !heSession()) return false;
+  const letters = (t.match(/[A-Za-z\u0590-\u05FF]/g) || []).length, he = (t.match(/[\u0590-\u05FF]/g) || []).length;
+  if (!letters || he / letters < .7) return false;
+  VOCAB ||= new Set(index.df.keys());
+  const words = tokenize(t).filter((w) => w.length > 2);
+  return words.length > 0 && words.filter((w) => VOCAB.has(w)).length / words.length >= .6;
+}
+const fromMaterial = (q, last) => last || `זה מה שמצאתי בחומר:\n${TOOLS.search_knowledge.run({ query: q })}`;
 const lmReady = async () => ['available', 'downloadable', 'downloading'].includes(await engineStatus());
 
 const ARG_KEYS = ['name', 'query', 'view'];
@@ -238,7 +272,7 @@ async function runModel(q, c, log, signal) {
       catch (err) { st.fail(err.message); throw err; }
       st.done(out.thought?.slice(0, 160) || '', 'החלטתי');
       const sig = out.action + JSON.stringify(ARG_KEYS.map((k) => out[k]));
-      if (out.action === 'final' || !TOOLS[out.action] || seen.has(sig)) return out.answer || last || out.thought;
+      if (out.action === 'final' || !TOOLS[out.action] || seen.has(sig)) return readsHebrew(out.answer) ? out.answer : fromMaterial(q, last);
       seen.add(sig);
       const args = Object.fromEntries(ARG_KEYS.filter((k) => out[k] != null && out[k] !== '').map((k) => [k, out[k]]));
       const res = await callTool(out.action, args, c, log, signal);
@@ -246,7 +280,7 @@ async function runModel(q, c, log, signal) {
       if (TOOLS[out.action].kind === 'ui' && !res.error) return res.text;
       input = `OBSERVATION from ${out.action}:\n${res.text.slice(0, 1600)}\nIf this answers the question, reply with action "final" and a short Hebrew answer. Otherwise call another tool.`;
     }
-    return last;
+    return fromMaterial(q, last);
   } finally {
     if (session !== base) session.destroy?.();
   }

@@ -21,7 +21,7 @@ export function initDocs({ onOpenDoc, onJumpEvent }) {
     grid.innerHTML = list.map((d, i) => {
       const ty = DOC_TYPES[d.type], c = issueById[d.issues[0]].color, ev = eventById[d.event];
       return `<article class="doc${d.real ? ' real' : ''}" data-doc="${d.id}" style="--c:${c};--d:${Math.min(i, 12) * .05}s" tabindex="0" data-tip="${esc(d.title)}" data-tip-sub="${d.real ? 'מסמך מקורי. לחצו לפתיחה' : 'לחצו לפתיחת המסמך'}" data-tip-k="${esc(ty.name)}">
-        <span class="doc-pages">${d.pages} עמ׳</span>${d.real ? '<span class="doc-real">מסמך מקורי</span>' : ''}
+        <span class="doc-pages">${d.type === 'video' ? 'וידאו' : `${d.pages} עמ׳`}</span>${d.real ? '<span class="doc-real">מסמך מקורי</span>' : ''}
         <div class="doc-top"><span class="doc-ic">${IC[ty.icon]}</span><span><span class="doc-type">${esc(ty.name)}</span><br><span class="doc-date">${esc(dateOf(d))}</span></span></div>
         ${d.badge ? `<span class="hl-badge">${esc(d.badge)}</span>` : ''}<h3>${esc(d.title)}</h3>
         <p>${esc(d.summary)}</p>
