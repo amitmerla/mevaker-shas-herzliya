@@ -55,6 +55,7 @@ const ctx = {
   docsForIssue: (id) => docs.showIssue(id),
   docsSearch: (s) => docs.search(s),
   modalOpen: () => modal.isOpen(),
+  focusPerson: (id) => { modal.close(); go('people'); setTimeout(() => hive.focus(id), 500); },
 };
 initAgent(ctx).then((a) => (agent = a));
 

@@ -203,5 +203,5 @@ export function initHive({ onOpenEvent }) {
   new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(layout); }).observe(stage);
   layout(); renderCard();
 
-  return { focus: (id) => { if (personById[id]) setFocus(id === focus ? null : id); }, clear: () => focus && setFocus(focus) };
+  return { focus: (id) => { if (personById[id] && id !== focus) setFocus(id); }, clear: () => focus && setFocus(focus) };
 }

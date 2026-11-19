@@ -33,6 +33,30 @@ export function findEvent(q) {
   return null;
 }
 export const findDoc = (q) => { const n = normHe(q); return DOCS.find((d) => n.includes(normHe(d.title))) || DOCS.find((d) => normHe(d.title).replace(/\(.*?\)/g, '').trim().split(' ').filter((w) => w.length > 3).every((w) => n.includes(w))) || null; };
+/* ── people: who the question is about ── */
+// Name words that identify a person. A shared first name (משה) only counts together with the surname.
+const COMMON_FIRST = new Set(['משה']);
+const SKIP = new Set(['עוד', 'עמותת', 'תנועת', 'בית', 'הכנסת']);
+const PKEYS = PEOPLE.map((p) => {
+  const words = normHe(p.name).split(/\s+/).filter((w) => w.length > 1 && !SKIP.has(w));
+  return { p, words, last: words[words.length - 1] };
+});
+/** The person (or body) a question is about, or null. Surname counts double; "משה" alone matches no one. */
+export function findPerson(q) {
+  const qt = new Set(tokenize(q));
+  let best = null, bestScore = 0;
+  for (const k of PKEYS) {
+    let sc = 0;
+    k.words.forEach((w) => { if (qt.has(w)) sc += w === k.last ? 2 : 1; });
+    const firstOnly = sc === 1 && !COMMON_FIRST.has(k.words.find((w) => qt.has(w)));
+    if ((sc >= 2 || firstOnly) && sc > bestScore) { best = k.p; bestScore = sc; }
+  }
+  return best;
+}
+/** Words that must appear in a passage for it to be about this person. */
+const personWords = (p) => { const k = PKEYS.find((x) => x.p === p); return k.words.filter((w) => !COMMON_FIRST.has(w)); };
+const mentions = (text, p) => { const t = new Set(tokenize(text)); return personWords(p).some((w) => t.has(w)); };
+
 const evLine = (e) => `- **${e.title}** (${dateOf(e)}, ${issueById[e.issue].name}${e.amount ? `, ${shekel(e.amount)}` : ''})`;
 /** The ~260 characters of a passage that best match the query. */
 function snippet(text, q, len = 260) {
@@ -130,8 +154,10 @@ ${ISSUES.map((i) => [i, withAmt.filter((e) => e.issue === i.id).reduce((t, e) =>
     desc: 'Search the full text of all documents, plus events, people and issues, by keywords. Returns quoted passages with page numbers. args: query',
     label: (a) => `מחפש בחומר: "${a.query}"`,
     run(a) {
-      const raw = index.search(a.query || '', 14), perDoc = {};
-      const hits = raw.filter(({ doc }) => doc.kind !== 'passage' || (perDoc[doc.doc] = (perDoc[doc.doc] || 0) + 1) <= 2).slice(0, 6);
+      const who = findPerson(a.query || ''), perDoc = {};
+      const raw = index.search(a.query || '', who ? 40 : 14);
+      const about = ({ doc }) => !who || (doc.kind === 'person' ? doc.id === who.id : doc.kind === 'passage' ? mentions(doc.text, who) : doc.kind === 'event' ? who.events.includes(doc.id) || mentions(`${doc.title} ${doc.text}`, who) : mentions(`${doc.title} ${doc.text}`, who));
+      const hits = raw.filter(about).filter(({ doc }) => doc.kind !== 'passage' || (perDoc[doc.doc] = (perDoc[doc.doc] || 0) + 1) <= 2).slice(0, 6);
       if (!hits.length) return `אין התאמה ל"${a.query}".`;
       return hits.map(({ doc }) => {
         if (doc.kind === 'passage') { const d = DOCS.find((x) => x.id === doc.doc); return `- מתוך **${d.title}** (עמ׳ ${doc.page}): "${snippet(doc.text, a.query || '')}"`; }
@@ -143,11 +169,31 @@ ${ISSUES.map((i) => [i, withAmt.filter((e) => e.issue === i.id).reduce((t, e) =>
       }).join('\n');
     },
   },
+  person_brief: {
+    kind: 'ui', args: { name: 'Name of a person or body from the investigation' },
+    desc: `Everything about one person or body: role in the story, links to others, timeline points, and quotes from the documents that mention them. Opens their card in the hive. People: ${PEOPLE.map((p) => p.name).join(', ')}. args: name`,
+    label: (a) => `פותח את הכרטיס של ${a.name}`,
+    run(a, c) {
+      const p = need(findPerson(a.name), 'אדם או גוף', a.name);
+      c.focusPerson?.(p.id);
+      const ls = LINKS.filter((l) => l.a === p.id || l.b === p.id).map((l) => `- **${personById[l.a === p.id ? l.b : l.a].name}**: ${l.label}${l.alleged ? ' (טענה)' : ''}`);
+      const evs = p.events.map((id) => eventById[id]).filter(Boolean).sort((x, y) => x.date.localeCompare(y.date));
+      const perDoc = {};
+      const quotes = index.search(`${p.name} ${a.name}`, 60).filter(({ doc }) => doc.kind === 'passage' && mentions(doc.text, p))
+        .filter(({ doc }) => (perDoc[doc.doc] = (perDoc[doc.doc] || 0) + 1) <= 1).slice(0, 3)
+        .map(({ doc }) => `- מתוך **${DOCS.find((d) => d.id === doc.doc).title}** (עמ׳ ${doc.page}): "${snippet(doc.text, personWords(p).join(' '))}"`);
+      return `**${p.name}** · ${p.role}${p.alleged ? ' · הקשר לסיפור טרם אומת' : ''}
+${p.story}${p.note ? `\n${p.note}` : ''}
+${evs.length ? `**מופיע בנקודות:**\n${evs.map(evLine).join('\n')}` : ''}
+${ls.length ? `**קשרים:**\n${ls.join('\n')}` : ''}
+${quotes.length ? `**מהמסמכים:**\n${quotes.join('\n')}` : ''}`.replace(/\n{2,}/g, '\n');
+    },
+  },
   navigate: {
-    kind: 'ui', args: { view: 'One of: hero, timeline, docs' },
-    desc: 'Scroll the page to a section. args: view (hero = opening, timeline, docs = documents)',
-    label: (a) => `עובר אל ${({ hero: 'הפתיחה', timeline: 'ציר הזמן', docs: 'המסמכים' })[a.view] || a.view}`,
-    run(a, c) { const v = ['hero', 'timeline', 'docs'].includes(a.view) ? a.view : /מסמכ/.test(a.view) ? 'docs' : /ציר|זמן/.test(a.view) ? 'timeline' : 'hero'; c.go(v); return 'הנה.'; },
+    kind: 'ui', args: { view: 'One of: hero, timeline, docs, people' },
+    desc: 'Scroll the page to a section. args: view (hero = opening, timeline, docs = documents, people = the hive of people involved)',
+    label: (a) => `עובר אל ${({ hero: 'הפתיחה', timeline: 'ציר הזמן', docs: 'המסמכים', people: 'המעורבים' })[a.view] || a.view}`,
+    run(a, c) { const v = ['hero', 'timeline', 'docs', 'people'].includes(a.view) ? a.view : /מסמכ/.test(a.view) ? 'docs' : /ציר|זמן/.test(a.view) ? 'timeline' : /מעורב|אנשים|כוורת|טלפונ/.test(a.view) ? 'people' : 'hero'; c.go(v); return 'הנה.'; },
   },
   start_tour: {
     kind: 'ui',
@@ -293,6 +339,12 @@ export async function runAgent(q, c, log, signal) {
     if (!order) continue;
     log.step('הבנתי מה ביקשתם', { kind: 'think', detail: `intent → ${order[0]}` }).done();
     return (await callTool(order[0], order[1], c, log, signal)).text;
+  }
+  // a question about a person or body (not an order to show documents) → their brief, from the material
+  const who = findPerson(q), nq = normHe(q);
+  if (who && (who.kind !== 'org' || /מי זה|מה זה|מהי|מהו|חלק|תפקיד|מעמד|קשור|מעורב|ספר לי/.test(nq)) && !/מסמכ|ראי[הו]ת/.test(nq)) {
+    log.step('זיהיתי על מי השאלה', { kind: 'think', detail: `person → ${who.name}` }).done();
+    return (await callTool('person_brief', { name: who.name }, c, log, signal)).text;
   }
   if (await lmReady()) {
     try { return await runModel(q, c, log, signal); }
