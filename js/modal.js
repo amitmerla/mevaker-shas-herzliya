@@ -50,7 +50,7 @@ export function initModal({ order, onJump, onShow }) {
           ${ev.shas ? `<span class="tag" style="--c:#4d8dff" data-tip="מעורבות ש״ס" data-tip-sub="באירוע הזה יש מעורבות של ש״ס">ש״ס</span>` : ''}
           <span class="m-idx">נקודה ${i + 1} מתוך ${order.length}</span>
         </div>
-        ${ev.badge ? `<span class="hl-badge lg">${esc(ev.badge)}</span>` : ''}<h2 id="m-title">${esc(ev.title)}</h2>
+        ${ev.badge ? `<span class="hl-badge lg${ev.alarm ? ' alarm' : ''}">${esc(ev.badge)}</span>` : ''}<h2 id="m-title">${esc(ev.title)}</h2>
         <p class="m-short">${esc(ev.short)}</p>
         ${ev.amount ? `<div class="m-amt" data-tip="הסכום באירוע" data-tip-sub="${esc(ev.amount.toLocaleString('he-IL'))} ₪"><b>${esc(shekel(ev.amount))}</b><span>סכום האירוע</span></div>` : ''}
       </header>
@@ -86,7 +86,7 @@ export function initModal({ order, onJump, onShow }) {
           ${d.issues.map((x) => `<span class="tag" style="--c:${issueById[x].color}" data-tip="${esc(issueById[x].name)}" data-tip-sub="${esc(issueById[x].desc)}" data-tip-k="נושא">${esc(issueById[x].name)}</span>`).join('')}
           <span class="m-idx">${d.type === 'video' ? 'וידאו' : `${d.pages} עמודים`}</span>
         </div>
-        ${d.badge ? `<span class="hl-badge lg">${esc(d.badge)}</span>` : ''}<h2 id="m-title">${esc(d.title)}</h2>
+        ${d.badge ? `<span class="hl-badge lg${d.alarm ? ' alarm' : ''}">${esc(d.badge)}</span>` : ''}<h2 id="m-title">${esc(d.title)}</h2>
         <p class="m-short">${esc(d.summary)}</p>
         ${d.quote ? `<blockquote class="m-quote">״${esc(d.quote.text)}״<cite>— ${esc(d.quote.by)}</cite></blockquote>` : ''}
         ${d.note ? `<p class="m-note" data-tip="הערת עריכה" data-tip-sub="פרט שכדאי לבדוק מול המקור">${IC.eye}<span>${esc(d.note)}</span></p>` : ''}

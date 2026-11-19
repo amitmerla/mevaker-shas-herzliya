@@ -54,7 +54,7 @@ export function initTimeline({ onOpen }) {
       <button class="tl-dot" data-open="${e.id}" aria-label="${esc(e.title)}" data-tip="${esc(e.title)}" data-tip-sub="לחצו לכל הנתונים" data-tip-k="${esc(monthOf(e))}"></button>
       <div class="tl-card" data-open="${e.id}" role="button" tabindex="0">
         <i class="shine"></i><span class="tl-num">${String(i + 1).padStart(2, '0')}</span>
-        <div class="tl-date"><span>${esc(monthOf(e))}</span>${e.badge ? `<span class="hl-badge sm">${esc(e.badge)}</span>` : ''}${e.shas ? `<span class="logo-slot shas xs" data-tip="מעורבות ש״ס" data-tip-sub="באירוע הזה יש מעורבות של ש״ס"><img src="assets/logos/shas.png" alt="" onerror="this.parentNode.classList.add('fb');this.remove()"><b class="fb-mark">ש״ס</b></span>` : ''}</div>
+        <div class="tl-date"><span>${esc(monthOf(e))}</span>${e.badge ? `<span class="hl-badge sm${e.alarm ? ' alarm' : ''}">${esc(e.badge)}</span>` : ''}${e.shas ? `<span class="logo-slot shas xs" data-tip="מעורבות ש״ס" data-tip-sub="באירוע הזה יש מעורבות של ש״ס"><img src="assets/logos/shas.png" alt="" onerror="this.parentNode.classList.add('fb');this.remove()"><b class="fb-mark">ש״ס</b></span>` : ''}</div>
         <h3 class="tl-title">${esc(e.title)}</h3>
         <p class="tl-short">${esc(e.short)}</p>
         <div class="tl-foot">

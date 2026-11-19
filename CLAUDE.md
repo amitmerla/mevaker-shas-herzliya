@@ -15,6 +15,7 @@ An investigation page for "המבקר" (Yossi Mizrahi, Channel 12): "איך ש״
 - **Agent RAG over the full documents:** `js/corpus.js` holds every document's text as passages, built by `sh tools/build-corpus.sh` (PDFKit text layer; emails, phones and ID numbers removed). **Rebuild it every time a document is added or changed.** Scanned PDFs, images and videos have no text layer and macOS OCR has no Hebrew, so their text goes by hand in `docs/text/<doc id>.txt` (no home addresses or IDs). The builder prints ✗ for any document without text.
 - **Gemini Nano writes gibberish Hebrew** (Hebrew isn't a supported language; the session falls back to English). So the model only plans tool calls; the answer shown is the material itself, unless a Hebrew session's answer passes `readsHebrew()` in agent.js.
 - **Questions about a person** (`findPerson` in agent.js) go straight to `person_brief`: their card, links, timeline points and only passages that name them; it also opens their cell in the hive. "משה" alone matches no one (Fadlon and Vaknin share it).
+- **Photos and screenshots go on the page cleaned:** re-encode to JPEG with no metadata (iPhone photos carry GPS), and crop email headers (the user's private address and recipients' names). Faces of private people get blurred (the 2023 video). The originals stay out of the repo.
 - The guided tour never starts on its own; only the tour buttons start it.
 - Document files: set `file` on a doc in data.js (e.g. `docs/d3.pdf`) and the doc modal shows it in an iframe.
 

@@ -23,7 +23,7 @@ export function initDocs({ onOpenDoc, onJumpEvent }) {
       return `<article class="doc${d.real ? ' real' : ''}" data-doc="${d.id}" style="--c:${c};--d:${Math.min(i, 12) * .05}s" tabindex="0" data-tip="${esc(d.title)}" data-tip-sub="${d.real ? 'מסמך מקורי. לחצו לפתיחה' : 'לחצו לפתיחת המסמך'}" data-tip-k="${esc(ty.name)}">
         <span class="doc-pages">${d.type === 'video' ? 'וידאו' : `${d.pages} עמ׳`}</span>${d.real ? '<span class="doc-real">מסמך מקורי</span>' : ''}
         <div class="doc-top"><span class="doc-ic">${IC[ty.icon]}</span><span><span class="doc-type">${esc(ty.name)}</span><br><span class="doc-date">${esc(dateOf(d))}</span></span></div>
-        ${d.badge ? `<span class="hl-badge">${esc(d.badge)}</span>` : ''}<h3>${esc(d.title)}</h3>
+        ${d.badge ? `<span class="hl-badge${d.alarm ? ' alarm' : ''}">${esc(d.badge)}</span>` : ''}<h3>${esc(d.title)}</h3>
         <p>${esc(d.summary)}</p>
         <div class="doc-tags">
           ${d.issues.map((x) => `<span class="tag" style="--c:${issueById[x].color}" data-tip="${esc(issueById[x].name)}" data-tip-sub="${esc(issueById[x].desc)}" data-tip-k="נושא">${IC[issueById[x].icon]}${esc(issueById[x].name)}</span>`).join('')}
