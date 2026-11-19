@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>המבקר · איך ש״ס שודדת את כספי תושבי הרצליה</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23070707'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%23ff2d3d' stroke-width='4'/%3E%3Cpath d='M32 13v38M13 32h38' stroke='%23ff2d3d' stroke-width='3'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%23ff2d3d'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&family=Karantina:wght@400;700&family=Secular+One&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body class="booting">
+<canvas id="cash" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+<div class="glow-cursor" id="glow" aria-hidden="true"></div>
+
+<!-- ── פתיחה: דלת הכספת ───────────────────────── -->
+<div class="intro" id="intro" aria-hidden="true">
+  <div class="intro-half r"></div><div class="intro-half l"></div>
+  <div class="vault" id="vault">
+    <svg viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="92" class="v-ring"/>
+      <circle cx="100" cy="100" r="74" class="v-ring2"/>
+      <g class="v-spokes">
+        <path d="M100 30v140M30 100h140M50 50l100 100M150 50L50 150"/>
+        <circle cx="100" cy="100" r="22"/>
+      </g>
+      <g class="v-ticks"></g>
+    </svg>
+    <div class="vault-num" id="vault-num">00-00-00</div>
+  </div>
+  <div class="intro-t"><img class="intro-c12" src="assets/logos/channel12.png" alt="חדשות 12"><span>חדשות 12 מציגה</span><img class="intro-logo" src="assets/logos/hamevaker.png" alt="המבקר · סדרת תחקירים"><i>תחקיר · יוסי מזרחי</i></div>
+  <button class="intro-skip" id="intro-skip">דלגו</button>
+</div>
+
+<!-- ── כותרת עליונה ───────────────────────────── -->
+<header class="top" id="top">
+  <div class="brand" data-tip="המבקר · יוסי מזרחי" data-tip-sub="פינת התחקירים של חדשות 12" data-tip-k="חדשות 12">
+    <span class="logo-slot c12" data-logo="channel12"><img src="assets/logos/channel12.png" alt="חדשות 12" onerror="this.parentNode.classList.add('fb');this.remove()"><b class="fb-mark">12</b></span>
+    <img class="hm-logo" src="assets/logos/hamevaker.png" alt="המבקר · סדרת תחקירים">
+    <span class="brand-t"><i>יוסי מזרחי</i></span>
+  </div>
+  <nav class="nav" id="nav">
+    <i class="nav-pill" id="nav-pill"></i>
+    <a href="#hero" data-tip="פתיחה" data-tip-sub="התחקיר במבט אחד">התחקיר</a>
+    <a href="#timeline" data-tip="ציר הזמן" data-tip-sub="מה קרה ומתי, צעד אחר צעד">ציר הזמן</a>
+    <a href="#docs" data-tip="המסמכים" data-tip-sub="כל מסמך מתויג לנושא ולנקודה בציר">מסמכים</a>
+  </nav>
+  <div class="top-acts">
+    <span class="logo-slot shas sm" data-tip="ש״ס" data-tip-sub="המפלגה שבמרכז התחקיר"><img src="assets/logos/shas.png" alt="ש״ס" onerror="this.parentNode.classList.add('fb');this.remove()"><b class="fb-mark">ש״ס</b></span>
+    <button class="btn ghost" id="btn-tour" data-tip="סיור מודרך" data-tip-sub="תוכנית הפעולה: נעבור יחד על כל העמוד" data-tip-k="8 שלבים">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="5" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M7 18h6a4 4 0 0 0 0-8h-2a4 4 0 0 1 0-8h6" transform="translate(0 4) scale(1 .8)"/></svg>
+      <span>סיור</span>
+    </button>
+    <button class="btn red" id="btn-agent" data-tip="שאלו את הסוכן" data-tip-sub="סוכן AI שרץ על המחשב שלכם ועונה רק מתוך חומרי התחקיר" data-tip-k="AI במכשיר">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>
+      <span>הסוכן</span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- ── פתיחה ─────────────────────────────────── -->
+  <section class="hero" id="hero">
+    <div class="hero-mark" aria-hidden="true">
+      <div class="mark-rings"><i></i><i></i><i></i></div>
+      <span class="logo-slot shas xl" data-logo="shas"><img src="assets/logos/shas.png" alt="" onerror="this.parentNode.classList.add('fb');this.remove()"><b class="fb-mark">ש״ס</b></span>
+      <div class="stamp">חסוי · בבדיקה</div>
+      <button class="ballot" id="ballot" data-tip="פתק ההצבעה של ש״ס" data-tip-sub="הפתק שתושבי הרצליה שמים בקלפי. לחצו להגדלה." data-tip-k="שס">
+        <img src="assets/logos/shas-ballot.png" alt="פתק ההצבעה של ש״ס">
+      </button>
+    </div>
+    <div class="hero-copy">
+      <div class="kicker reveal"><span class="rec"></span><span id="kicker">תחקיר · המבקר</span></div>
+      <h1 class="hero-title" id="hero-title"></h1>
+      <p class="lede reveal" id="lede"></p>
+      <div class="byline reveal">
+        <span class="logo-slot c12 sm"><img src="assets/logos/channel12.png" alt="" onerror="this.parentNode.classList.add('fb');this.remove()"><b class="fb-mark">12</b></span>
+        <img class="hm-logo sm" src="assets/logos/hamevaker.png" alt="המבקר">
+        <span>יוסי מזרחי · חדשות 12</span>
+      </div>
+      <div class="heist-counter reveal" id="counter" data-tip="הסכום המצטבר" data-tip-sub="סכום כל האירועים בציר הזמן שיש להם סכום." data-tip-k="₪">
+        <span class="hc-l">הכסף שזרם, עד עכשיו</span>
+        <span class="hc-v"><span id="total">0</span><small>₪</small></span>
+        <span class="hc-bar"><i id="total-bar"></i></span>
+      </div>
+      <div class="stats reveal" id="stats"></div>
+      <div class="hero-cta reveal">
+        <a class="btn red lg magnetic" href="#timeline" data-tip="לציר הזמן" data-tip-sub="כל האירועים לפי הסדר">לציר הזמן</a>
+        <button class="btn ghost lg magnetic" id="btn-tour2" data-tip="סיור מודרך" data-tip-sub="דקה אחת, וכל העמוד ברור">הסיור המודרך</button>
+      </div>
+    </div>
+    <div class="scroll-hint" aria-hidden="true"><i></i></div>
+  </section>
+
+  <!-- ── המבקר: הפריים של יוסי ─────────────────── -->
+  <section class="presenter" id="presenter">
+    <figure class="pr-frame" id="pr-frame" data-tip="יוסי מזרחי · המבקר" data-tip-sub="סדרת התחקירים של חדשות 12" data-tip-k="המגיש">
+      <img class="pr-img" src="assets/hamevaker-banner.png" alt="יוסי מזרחי · המבקר, סדרת תחקירים">
+      <i class="pr-bar t"></i><i class="pr-bar b"></i><i class="pr-scan"></i>
+      <figcaption class="pr-cap"><span class="rec"></span><span>LIVE · המבקר</span><b>יוסי מזרחי</b><em>סדרת תחקירים · חדשות 12</em></figcaption>
+      <span class="pr-tc" id="pr-tc">00:00:00:00</span>
+    </figure>
+  </section>
+
+  <!-- ── ציר הזמן ──────────────────────────────── -->
+  <section class="sec" id="timeline">
+    <div class="sec-head">
+      <div>
+        <div class="sec-k">01 · תוכנית הפעולה</div>
+        <h2 class="sec-t" data-scramble>ציר הזמן</h2>
+        <p class="sec-s">לחצו על נקודה כדי לפתוח את כל הנתונים שלה. גררו, גללו או השתמשו בחצים.</p>
+      </div>
+      <div class="chips" id="tl-chips" role="toolbar" aria-label="סינון לפי נושא"></div>
+    </div>
+    <div class="tl-wrap" id="tl-wrap">
+      <button class="tl-arrow next" id="tl-next" aria-label="קדימה" data-tip="קדימה בזמן"></button>
+      <button class="tl-arrow prev" id="tl-prev" aria-label="אחורה" data-tip="אחורה בזמן"></button>
+      <div class="tl-scroller" id="tl-scroller" tabindex="0" aria-label="ציר הזמן">
+        <div class="tl-track" id="tl-track">
+          <svg class="tl-svg" id="tl-svg" aria-hidden="true"></svg>
+        </div>
+      </div>
+      <div class="tl-mini" id="tl-mini" data-tip="מפת הציר" data-tip-sub="לחצו כדי לקפוץ לנקודה בזמן"><i id="tl-mini-win"></i></div>
+    </div>
+  </section>
+
+  <!-- ── מסמכים ────────────────────────────────── -->
+  <section class="sec" id="docs">
+    <div class="sec-head">
+      <div>
+        <div class="sec-k">02 · הראיות</div>
+        <h2 class="sec-t" data-scramble>המסמכים</h2>
+        <p class="sec-s">כל מסמך מתויג לנושא ולנקודה בציר הזמן. לחיצה על התגית קופצת לנקודה.</p>
+      </div>
+      <label class="search" data-tip="חיפוש" data-tip-sub="שם מסמך, נושא, סוג או תאריך">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>
+        <input id="doc-q" type="search" placeholder="חיפוש במסמכים…" autocomplete="off">
+      </label>
+    </div>
+    <div class="chips" id="doc-chips" role="toolbar" aria-label="סינון מסמכים לפי נושא"></div>
+    <div class="doc-grid" id="doc-grid"></div>
+    <p class="empty" id="doc-empty" hidden>אין מסמכים שמתאימים לחיפוש.</p>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="foot-logos">
+    <span class="logo-slot c12 sm"><img src="assets/logos/channel12.png" alt="חדשות 12" onerror="this.parentNode.classList.add('fb');this.remove()"><b class="fb-mark">12</b></span>
+    <span class="logo-slot shas sm"><img src="assets/logos/shas.png" alt="ש״ס" onerror="this.parentNode.classList.add('fb');this.remove()"><b class="fb-mark">ש״ס</b></span>
+    <img class="foot-ballot" src="assets/logos/shas-ballot.png" alt="פתק ההצבעה של ש״ס" data-tip="פתק ההצבעה של ש״ס" data-tip-k="שס">
+  </div>
+  <img class="hm-logo foot" src="assets/logos/hamevaker.png" alt="המבקר · סדרת תחקירים">
+  <p>יוסי מזרחי · חדשות 12</p>
+  <p class="draft" id="draft-note">טיוטה: ציר הזמן והמסמכים מבוססים על חומרי התחקיר. טקסט הפתיחה עדיין טקסט דוגמה.</p>
+</footer>
+
+<!-- ── מודאל ─────────────────────────────────── -->
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="m-title" hidden>
+  <div class="m-back" data-close></div>
+  <article class="m-card" id="m-card"></article>
+</div>
+
+<!-- ── הסוכן ─────────────────────────────────── -->
+<aside class="agent" id="agent" aria-label="סוכן התחקיר" hidden>
+  <div class="ag-head">
+    <div class="ag-orb" id="ag-orb"><i></i></div>
+    <div class="ag-t"><b>סוכן התחקיר</b><span id="ag-engine" data-tip="המנוע" data-tip-sub="מודל שפה שרץ בדפדפן (Chrome Prompt API). בלעדיו: חיפוש חכם במסמכים.">בודק מנוע…</span></div>
+    <button class="icon-btn" id="ag-close" aria-label="סגירה" data-tip="סגירה" data-tip-k="Esc"></button>
+  </div>
+  <div class="ag-log" id="ag-log">
+    <div class="welcome">
+      <b>שלום, אני סוכן התחקיר.</b>
+      <p>אני עונה רק מתוך החומר שבעמוד: ציר הזמן, המסמכים והנושאים. אפשר לשאול למשל:</p>
+      <div class="sugs" id="ag-sugs"></div>
+    </div>
+  </div>
+  <form class="ag-form" id="ag-form">
+    <input id="ag-q" placeholder="שאלו כל דבר על התחקיר…" autocomplete="off">
+    <button class="icon-btn red" id="ag-send" aria-label="שליחה" data-tip="שליחה" data-tip-k="Enter"></button>
+  </form>
+</aside>
+
+<!-- ── סיור מודרך ────────────────────────────── -->
+<div class="tour" id="tour" hidden>
+  <svg class="tour-mask" aria-hidden="true"><defs><mask id="tmask"><rect width="100%" height="100%" fill="#fff"/><rect id="thole" rx="18" fill="#000"/></mask></defs><rect width="100%" height="100%" mask="url(#tmask)"/></svg>
+  <div class="tour-ring" id="tour-ring"></div>
+  <div class="tour-card" id="tour-card" role="dialog" aria-live="polite"></div>
+</div>
+
+<div class="tip" id="tip" role="tooltip"><div class="tip-in"></div></div>
+<div class="toast" id="toast"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
