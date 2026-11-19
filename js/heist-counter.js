@@ -21,16 +21,19 @@ function buildOdometer(el, total) {
     place--;
     return `<span class="od-d" data-p="${place}"><span class="od-r">${'01234567890'.split('').map((d) => `<i>${d}</i>`).join('')}</span></span>`;
   }).join('');
-  const digits = [...el.querySelectorAll('.od-d')].map((d) => ({ el: d, reel: d.firstChild, p: +d.dataset.p }));
+  // lowest place first, so each place knows how far the one below it has rolled
+  const digits = [...el.querySelectorAll('.od-d')].map((d) => ({ el: d, reel: d.firstChild, p: +d.dataset.p })).sort((a, b) => a.p - b.p);
   const commas = [...el.querySelectorAll('.od-c')].map((c) => ({ el: c, p: +c.dataset.p }));
   return function render(v, speed) {
     const len = v >= 1 ? Math.floor(Math.log10(v)) + 1 : 1;
+    let below = 0; // how far the place below is shown (0–10)
     for (const d of digits) {
       const pow = 10 ** d.p;
-      // the ones roll continuously; higher places turn over only while the place below passes 9 → 0
-      let pos = Math.floor(v / pow) % 10;
-      if (d.p === 0) pos = v % 10;
-      else { const below = (v % pow) / pow * 10; if (below > 9) pos += below - 9; }
+      // the ones roll continuously; a higher place turns only while the place below rolls from 9 to 0,
+      // so at a whole number every reel rests exactly on a digit
+      let pos = d.p === 0 ? v % 10 : Math.floor(v / pow) % 10 + Math.max(0, below - 9);
+      if (Number.isInteger(v)) pos = Math.round(pos);
+      below = pos;
       d.reel.style.transform = `translateY(${(-pos * 100 / 11).toFixed(3)}%)`;
       const blur = clamp(speed / pow / 40, 0, 1);
       d.reel.style.filter = blur > .05 ? `blur(${(blur * 2.4).toFixed(2)}px)` : '';
