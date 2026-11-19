@@ -9,6 +9,7 @@ import { initDocs } from './docs.js';
 import { initTour } from './tour.js';
 import { initAgent } from './agentui.js';
 import { initHeistCounter } from './heist-counter.js';
+import { initHive } from './hive.js';
 
 const cash = initCash();
 initCursorGlow();
@@ -41,6 +42,7 @@ docs = initDocs({
   onOpenDoc: (id, e) => modal.openDoc(id, e),
   onJumpEvent: (id, e) => { go('timeline'); setTimeout(() => tl.focus(id), 450); setTimeout(() => modal.openEvent(id, e), 1100); },
 });
+const hive = initHive({ onOpenEvent: (id, e) => { go('timeline'); setTimeout(() => tl.focus(id), 450); setTimeout(() => modal.openEvent(id, e), 1100); } });
 tour = initTour({ onStart: () => { agent?.close(); modal.close(); }, onEnd: () => toast('הסיור הסתיים. ריחפו מעל כל דבר כדי לגלות עוד.') });
 
 // what the agent may do on the page
@@ -67,7 +69,7 @@ $('.foot-ballot').onclick = (e) => modal.openMedia(BALLOT, e);
 const nav = $('#nav'), pill = $('#nav-pill');
 const setPill = (a) => { $$('a', nav).forEach((x) => x.classList.toggle('on', x === a)); pill.style.left = `${a.offsetLeft}px`; pill.style.width = `${a.offsetWidth}px`; };
 const secIO = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { const a = $(`a[href="#${e.target.id}"]`, nav); if (a) setPill(a); } }), { rootMargin: '-45% 0px -50% 0px' });
-['hero', 'timeline', 'docs'].forEach((id) => secIO.observe($(`#${id}`)));
+['hero', 'timeline', 'docs', 'people'].forEach((id) => secIO.observe($(`#${id}`)));
 
 // ── presenter frame: opens like a shutter, drifts with scroll, runs a broadcast timecode
 const pr = $('#pr-frame');

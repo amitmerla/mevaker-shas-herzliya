@@ -11,6 +11,7 @@ An investigation page for "המבקר" (Yossi Mizrahi, Channel 12): "איך ש״
 - **המבקר branding (from the user, approved by Yossi Mizrahi for this page):** `assets/logos/hamevaker.png` (the logo: header, intro, byline, footer) and `assets/hamevaker-banner.png` (Yossi + logo: the "presenter" section between the hero and the timeline, also tour step 2).
 - **Theme:** Money Heist mood (black, jumpsuit red, vault, falling banknotes) with Apple/Tesla clean layout. No Netflix / show artwork is used.
 - Timeline runs right → left (Hebrew reading order); RTL scrollLeft is 0 → negative.
+- **The hive (המעורבים, `js/hive.js`):** PEOPLE and LINKS in data.js. Contact details are official/public only (office, official site). No home addresses or private phone numbers, since the page is public. `alleged: true` marks a person or link that is a claim or suspicion (dashed in the hive).
 - Document files: set `file` on a doc in data.js (e.g. `docs/d3.pdf`) and the doc modal shows it in an iframe.
 
 ## Not verified yet

@@ -3,7 +3,7 @@
 //   2. Everything else is planned by the on-device model (Chrome Prompt API), one tool call per turn.
 //   3. Without the model, the intent map plus retrieval answers on its own.
 // The same read-only tools are published to external agents through WebMCP (navigator.modelContext).
-import { STORY, EVENTS, DOCS, ISSUES, issueById, eventById, docsOf, DOC_TYPES, totalAmount, PLACEHOLDER } from './data.js';
+import { STORY, EVENTS, DOCS, ISSUES, issueById, eventById, docsOf, DOC_TYPES, totalAmount, PLACEHOLDER, PEOPLE, LINKS, personById } from './data.js';
 import { Index, normHe } from './rag.js';
 import { shekel, fmtDate, dateOf, monthOf } from './util.js';
 
@@ -13,6 +13,7 @@ export const index = new Index([
   { id: 'story', kind: 'story', title: STORY.title, text: `${STORY.kicker} ${STORY.lede} ${STORY.show} ${STORY.reporter} ${STORY.channel} ${STORY.city}` },
   ...ISSUES.map((i) => ({ id: i.id, kind: 'issue', title: i.name, text: i.desc })),
   ...EVENTS.map((e) => ({ id: e.id, kind: 'event', title: e.title, text: [e.short, ...e.body, ...(e.facts || []).flat(), ...(e.people || []), e.quote?.text, e.quote?.by, issueById[e.issue].name, dateOf(e), e.date.slice(0, 4), e.shas ? 'ש״ס' : ''].join(' ') })),
+  ...PEOPLE.map((p) => ({ id: p.id, kind: 'person', title: p.name, text: [p.role, p.short, p.story, p.note, ...LINKS.filter((l) => l.a === p.id || l.b === p.id).map((l) => `${personById[l.a === p.id ? l.b : l.a].name} ${l.label}`)].join(' ') })),
   ...DOCS.map((d) => ({ id: d.id, kind: 'doc', title: d.title, text: [d.summary, DOC_TYPES[d.type].name, ...d.issues.map((x) => issueById[x].name), eventById[d.event]?.title, dateOf(d), d.date.slice(0, 4)].join(' ') })),
 ]);
 
@@ -118,6 +119,7 @@ ${ISSUES.map((i) => [i, withAmt.filter((e) => e.issue === i.id).reduce((t, e) =>
       return hits.map(({ doc }) => {
         if (doc.kind === 'event') { const e = eventById[doc.id]; return `${evLine(e)}: ${e.short}`; }
         if (doc.kind === 'doc') { const d = DOCS.find((x) => x.id === doc.id); return `- מסמך **${d.title}** (${DOC_TYPES[d.type].name}, ${dateOf(d)}), שייך ל**${eventById[d.event]?.title}**`; }
+        if (doc.kind === 'person') { const p = personById[doc.id]; return `- **${p.name}** (${p.role}): ${p.story}${p.note ? ` ${p.note}` : ''}`; }
         if (doc.kind === 'issue') return `- נושא **${doc.title}**: ${doc.text}`;
         return `- ${STORY.lede}`;
       }).join('\n');

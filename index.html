@@ -47,6 +47,7 @@
     <a href="#hero" data-tip="פתיחה" data-tip-sub="התחקיר במבט אחד">התחקיר</a>
     <a href="#timeline" data-tip="ציר הזמן" data-tip-sub="מה קרה ומתי, צעד אחר צעד">ציר הזמן</a>
     <a href="#docs" data-tip="המסמכים" data-tip-sub="כל מסמך מתויג לנושא ולנקודה בציר">מסמכים</a>
+    <a href="#people" data-tip="המעורבים" data-tip-sub="מי מעורב ומי קשור למי">מעורבים</a>
   </nav>
   <div class="top-acts">
     <span class="logo-slot shas sm" data-tip="ש״ס" data-tip-sub="המפלגה שבמרכז התחקיר"><img src="assets/logos/shas.png" alt="ש״ס" onerror="this.parentNode.classList.add('fb');this.remove()"><b class="fb-mark">ש״ס</b></span>
@@ -143,6 +144,24 @@
     <div class="chips" id="doc-chips" role="toolbar" aria-label="סינון מסמכים לפי נושא"></div>
     <div class="doc-grid" id="doc-grid"></div>
     <p class="empty" id="doc-empty" hidden>אין מסמכים שמתאימים לחיפוש.</p>
+  </section>
+
+  <!-- ── המעורבים (הכוורת) ─────────────────────── -->
+  <section class="sec" id="people">
+    <div class="sec-head">
+      <div>
+        <div class="sec-k">03 · הצוות</div>
+        <h2 class="sec-t" data-scramble>המעורבים</h2>
+        <p class="sec-s">ספר הטלפונים של התחקיר: מי מעורב, מה מעמדו בסיפור, ומי קשור למי. קו מלא מתועד במסמך; קו מקווקו הוא טענה או חשד.</p>
+      </div>
+    </div>
+    <div class="hive">
+      <div class="hive-stage" id="hive-stage">
+        <svg class="hive-links" id="hive-links" aria-hidden="true"></svg>
+        <span class="hive-label" id="hive-label" aria-hidden="true"></span>
+      </div>
+      <aside class="hive-card" id="hive-card" aria-live="polite"></aside>
+    </div>
   </section>
 </main>
 
